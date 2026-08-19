@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Browser-based ORM HL7 to SLB XML simulator">
+    <title>HL7 to SLB XML Simulator</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<main class="container">
+    <header>
+        <p class="eyebrow">Integration Study Tool</p>
+        <h1>HL7 <span aria-hidden="true">→</span> SLB XML Simulator</h1>
+        <p class="subtitle">ORM New Order baseline. Processing stays in this browser; no HL7 content is sent to a server.</p>
+    </header>
+
+    <section aria-labelledby="inputHeading">
+        <div class="section-heading">
+            <h2 id="inputHeading">HL7 Input</h2>
+            <button id="clearButton" class="secondary" type="button">Clear</button>
+        </div>
+        <textarea id="hl7Input" spellcheck="false" placeholder="Paste an ORM HL7 message beginning with MSH| ..." aria-describedby="privacyNote"></textarea>
+        <p id="privacyNote" class="note">Use synthetic or approved test data only. Do not enter real patient information.</p>
+        <button id="transformButton" class="primary" type="button">Transform ORM</button>
+        <div id="status" role="status" aria-live="polite"></div>
+    </section>
+
+    <section aria-labelledby="outputHeading">
+        <div class="section-heading">
+            <h2 id="outputHeading">XML Output</h2>
+            <button id="copyButton" class="secondary" type="button" disabled>Copy XML</button>
+        </div>
+        <pre id="xmlOutput" tabindex="0" aria-label="Generated XML output"></pre>
+    </section>
+
+    <footer>Study simulator only — not an approved production SLB interface.</footer>
+</main>
+<script src="app.js"></script>
+</body>
+</html>
