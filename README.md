@@ -19,7 +19,7 @@ The DFT is the primary source of charge fields (`FT1-6`, `FT1-7`, `FT1-10`, `FT1
 - Scenario 7: `ZOR|item|quantity`
 - Scenario 11: `ZOR|item|quantity|turnInType|compoundOrderId|itemCode`
 
-The tool verifies Visit Number and Order correlation before producing XML. ZOR remains a proposed vendor mapping and must be approved in the interface specification before production implementation.
+The tool verifies Visit Number and Order correlation before producing XML. Normal correlated ORM and DFT messages generate standard charge XML. Scenarios 4, 7, and 11 add their proposed ZOR mapping, which must be approved in the interface specification before production implementation.
 
 ## Safety and limitations
 
