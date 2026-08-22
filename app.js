@@ -1,169 +1,23 @@
 "use strict";
+const $=id=>document.getElementById(id),norm=s=>(s||"").replace(/\r\n?/g,"\n").replace(/\s+(?=(?:MSH|EVN|PID|PV1|ORC|OBR|OBX|FT1|ZOR|NTE)\|)/g,"\n").trim(),segs=s=>norm(s).split("\n").map(x=>x.trim()).filter(Boolean),seg=(s,n)=>segs(s).find(x=>x.startsWith(n+"|"))||"";
+function fld(s,n){const p=s.split("|");return s.startsWith("MSH|")?(n===1?"|":p[n-1]||""):p[n]||""}const cmp=(s,n=1)=>(s||"").split("^")[n-1]||"";
+function info(s){const msh=seg(s,"MSH"),pid=seg(s,"PID"),pv1=seg(s,"PV1"),orc=seg(s,"ORC"),obr=seg(s,"OBR"),ft1=seg(s,"FT1"),mt=fld(msh,9).split("^");return{type:mt[0]||"Unknown",event:mt[1]||"",control:fld(msh,10),time:fld(msh,7),patient:cmp(fld(pid,3))||cmp(fld(pid,2)),visit:cmp(fld(pid,18))||cmp(fld(pv1,19)),patientClass:fld(pv1,2),order:cmp(fld(ft1,23))||cmp(fld(orc,2))||cmp(fld(obr,2)),service:cmp(fld(obr,4))||cmp(fld(ft1,7))}}
+function xval(x,names){for(const n of names){const m=(x||"").match(new RegExp(`<(?:[\\w.-]+:)?${n}(?:\\s[^>]*)?>([\\s\\S]*?)<\\/(?:[\\w.-]+:)?${n}>`,"i"));if(m)return m[1].replace(/<[^>]+>/g,"").trim()}return""}const num=v=>String(v).trim()===""?null:Number(v),esc=s=>String(s??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&apos;");
+const facts=d=>`<div class="facts"><div><small>Message</small><b>${d.type}${d.event?"^"+d.event:""}</b></div><div><small>Control ID</small><b>${d.control||"Not found"}</b></div><div><small>Visit</small><b>${d.visit||"Not found"}</b></div><div><small>Order</small><b>${d.order||"Not found"}</b></div></div>`;
+function render(id,r,d){$(id).innerHTML=`<div class="verdict ${r.tone}"><small>Predicted issue • Confidence: ${r.confidence}</small><h2>${r.title}</h2><p>Predicted owner: <b>${r.owner}</b></p></div>${facts(d)}<div class="section"><h3>Supporting evidence</h3><ul>${(r.evidence.length?r.evidence:["Additional operational evidence is required."]).map(x=>`<li>${x}</li>`).join("")}</ul></div><div class="section"><h3>Proposed investigation and solution</h3><ol>${r.actions.map(x=>`<li>${x}</li>`).join("")}</ol></div>${r.extra||""}`}
+document.querySelectorAll(".nav button").forEach(b=>b.onclick=()=>{document.querySelectorAll(".nav button,.panel").forEach(x=>x.classList.remove("active"));b.classList.add("active");$(b.dataset.tool).classList.add("active")});
 
-class InvalidHl7Error extends Error {}
+function analyzeOCIS(){const raw=$("ocisHl7").value,d=info(raw),msh=seg(raw,"MSH"),evn=seg(raw,"EVN"),pid=seg(raw,"PID"),pv1=seg(raw,"PV1"),orc=seg(raw,"ORC"),obr=seg(raw,"OBR"),ft1=seg(raw,"FT1"),obx=segs(raw).filter(x=>x.startsWith("OBX|")),find=[];const req=(name,field,value,ocis)=>find.push({name,field,value,ocis,level:value?"pass":"fail"});req("Message type","MSH-9",fld(msh,9),"Interface event");req("Message Control ID","MSH-10",d.control,"Interface transaction");req("Patient identifier","PID-3",d.patient,"Patient/MRN");req("Visit Number","PID-18 or PV1-19",d.visit,"Encounter");if(["ADT","ORM","RDE","DFT"].includes(d.type))req("Patient class","PV1-2",d.patientClass,"Encounter class");if(d.type==="ADT"){req("ADT event","EVN-1",fld(evn,1),"Encounter event");req("Patient name","PID-5",fld(pid,5),"Demographics");req("Patient location","PV1-3",fld(pv1,3),"Location/bed");find.push({name:"Attending doctor",field:"PV1-7",value:fld(pv1,7),ocis:"Attending Doctor",level:fld(pv1,7)?"pass":"warn"})}if(d.type==="ORM"||d.type==="RDE"){req("Order action","ORC-1",fld(orc,1),"Order action");req("Order ID","ORC-2/OBR-2",d.order,"Order record");req("Procedure code","OBR-4",cmp(fld(obr,4)),"Order service");find.push({name:"Ordering doctor",field:"ORC-12/OBR-16",value:fld(orc,12)||fld(obr,16),ocis:"Requesting doctor",level:(fld(orc,12)||fld(obr,16))?"pass":"warn"})}if(d.type==="DFT"){req("Transaction type","FT1-6",fld(ft1,6),"Charge action");req("Service code","FT1-7",cmp(fld(ft1,7)),"Charge item");req("Quantity","FT1-10",fld(ft1,10),"Charge quantity");req("Related Order ID","FT1-23",d.order,"Charge-order link")}if(d.type==="ORU"){req("Order/accession","OBR-2/3",cmp(fld(obr,2))||cmp(fld(obr,3)),"Result order");req("Procedure","OBR-4",cmp(fld(obr,4)),"Result procedure");req("Result status","OBR-25",fld(obr,25),"Result status");if(!obx.length)req("Result observations","OBX","","Result details")}const fail=find.filter(x=>x.level==="fail"),warn=find.filter(x=>x.level==="warn"),title=fail.length?"OCIS CORRECTION REQUIRED":warn.length?"CONFIRM ELINK PROFILE":"SOURCE MESSAGE COMPLETE",tone=fail.length?"danger":warn.length?"warning":"success";render("ocisResult",{title,tone,confidence:fail.length?"High":warn.length?"Medium":"High",owner:fail.length?"OCIS / Source":"Proceed to eLink",evidence:find.map(x=>`${x.field}: ${x.value||"blank"} — ${x.ocis}`),actions:fail.length?["Correct the first confirmed missing value in OCIS.","Regenerate HL7 through the approved OCIS workflow.","Confirm eLink acceptance before proceeding downstream."]:["Confirm profile-dependent fields.","Capture eLink status and acknowledgement."]},d)}
 
-class ParsedHl7 {
-    constructor(segments) {
-        this.allSegments = segments;
-    }
+function analyzeESB(){const raw=$("esbHl7").value,xml=$("esbXml").value,status=$("esbStatus").value,error=$("esbError").value,accepted=$("esbAccepted").checked,d=info(raw),xo=xval(xml,["ci_no","order_id","charge_order_no"]),xv=xval(xml,["visit_no","visit_number"]),mismatch=(xo&&d.order&&xo!==d.order)||(xv&&d.visit&&xv!==d.visit);let r={title:"Insufficient ESB evidence",tone:"warning",confidence:"Low",owner:"ESB",evidence:[],actions:["Confirm ESB status and correlation ID."]};if(!accepted)r={title:"eLink-to-ESB handoff not confirmed",tone:"danger",confidence:"High",owner:"eLink / routing",evidence:["eLink acceptance is not confirmed."],actions:["Confirm eLink acceptance.","Capture the eLink transaction ID before investigating ESB."]};else if(status==="not-found")r={title:"ESB routing or correlation failure",tone:"danger",confidence:"High",owner:"eLink / ESB",evidence:["Message not found in ESB after eLink acceptance."],actions:["Search by Control ID, Visit and Order.","Check outbound destination and inbound routing filters."]};else if(status==="rejected"&&mismatch)r={title:"ESB mapping or correlation rejection",tone:"danger",confidence:"High",owner:"ESB vendor",evidence:[`Visit HL7 ${d.visit||"missing"} → XML ${xv||"missing"}.`,`Order HL7 ${d.order||"missing"} → XML ${xo||"missing"}.`,error],actions:["Correct the first mapping mismatch.","Regenerate XML from the accepted HL7.","Replay only after validation."]};else if(status==="processing")r={title:"ESB transformation stuck",tone:"warning",confidence:"Medium",owner:"ESB vendor",evidence:[error],actions:["Inspect the transformation trace.","Check mapping exceptions and resource saturation.","Do not create a duplicate while processing remains active."]};else if(status==="timeout")r={title:"ESB downstream timeout",tone:"danger",confidence:"High",owner:"ESB / connectivity",evidence:[error],actions:["Check endpoint, network, certificate and authentication.","Confirm automatic retry before manual replay."]};else if(status==="queued"||status==="sent")r={title:status==="queued"?"ESB placed message on ActiveQ":"ESB outbound transmission confirmed",tone:"success",confidence:"High",owner:status==="queued"?"Proceed to ActiveQ":"Proceed downstream",evidence:[error||"ESB handoff confirmed."],actions:["Capture correlation ID and timestamp.","Do not resend while the queued/sent copy exists."]};render("esbResult",r,d)}
 
-    firstSegment(segmentName) {
-        return this.allSegments.find(segment => segment.startsWith(`${segmentName}|`)) || "";
-    }
+function analyzeAQ(){const raw=$("aqHl7").value,d=info(raw),status=$("aqStatus").value,depth=num($("aqDepth").value),age=num($("aqAge").value),cons=num($("aqConsumers").value),ret=num($("aqRetries").value),dlq=num($("aqDlq").value),scope=$("aqScope").value,error=$("aqError").value,e=[`Queue ${$("aqName").value||"not supplied"}; depth=${depth??"unknown"}; age=${age??"unknown"}; consumers=${cons??"unknown"}.`,error];let r={title:"Insufficient ActiveQ evidence",tone:"warning",confidence:"Low",owner:"Messaging",evidence:e,actions:["Confirm queue status and metrics."]};if(status==="not-found")r={title:"Message not published to expected queue",tone:"danger",confidence:"High",owner:"ESB / routing",evidence:e,actions:["Return to ESB and confirm publish success and queue name.","Do not investigate SLB yet."]};else if(scope==="multiple"&&depth>0)r={title:"Shared broker or connectivity disruption",tone:"danger",confidence:"High",owner:"Messaging platform",evidence:e,actions:["Check broker health, network, authentication and certificates.","Do not purge queues."]};else if(status==="queued"&&depth>0&&cons===0)r={title:"ActiveQ consumer unavailable",tone:"danger",confidence:"High",owner:"Consumer / Messaging",evidence:e,actions:["Verify consumer registration and broker connection.","Recover only the affected consumer.","Confirm queue drain; do not purge."]};else if(status==="retrying"||ret>0)r={title:"Poison message or downstream retry",tone:"danger",confidence:"High",owner:"Consumer / downstream",evidence:e,actions:["Inspect the exact retrying message and last exception.","Correct the cause before targeted replay.","Do not bulk-requeue."]};else if(status==="dlq"||dlq>0)r={title:"Message moved to dead-letter queue",tone:"danger",confidence:"High",owner:"Messaging / application",evidence:e,actions:["Capture dead-letter reason and retry history.","Preserve the original for audit.","Replay only after correction."]};else if(status==="queued"&&depth>0&&cons>0)r={title:"ActiveQ backlog or downstream latency",tone:"warning",confidence:age>=15?"High":"Medium",owner:"Consumer / downstream",evidence:e,actions:["Compare publish and consume rates.","Check consumer processing and downstream latency."]};else if(status==="consumed")r={title:"ActiveQ consumption confirmed",tone:"success",confidence:"High",owner:"Proceed to SLB",evidence:e,actions:["Capture consume timestamp and consumer name.","Search SLB with the same identifiers."]};render("activeqResult",r,d)}
 
-    segments(segmentName) {
-        return this.allSegments.filter(segment => segment.startsWith(`${segmentName}|`));
-    }
+function analyzeSLB(){const raw=$("slbHl7").value,d=info(raw),prior=$("slbPrior").value,xml=$("slbXml").value,status=$("slbStatus").value,sym=$("slbSymptom").value,response=$("slbResponse").value,xo=xval(xml,["ci_no","order_id"]),xv=xval(xml,["visit_no","visit_number"]),xs=xval(xml,["service_code","procedure_code","mservice_code"]),mismatch=(xo&&d.order&&xo!==d.order)||(xv&&d.visit&&xv!==d.visit),e=[response];let r={title:"Insufficient SLB evidence",tone:"warning",confidence:"Low",owner:"SLB / Integration",evidence:e,actions:["Confirm SLB receipt status and exact response."]};if(status==="not-found")r={title:"SLB delivery not confirmed",tone:"danger",confidence:"High",owner:"ESB / ActiveQ",evidence:e,actions:["Return to ActiveQ and confirm consumption.","Verify SLB destination and outbound timestamp."]};else if(status==="timeout")r={title:"SLB connectivity or response timeout",tone:"danger",confidence:"High",owner:"ESB / SLB connectivity",evidence:e,actions:["Check endpoint, network, certificate and authentication.","Confirm automatic retry before replay."]};else if(status==="rejected"&&mismatch)r={title:"SLB correlation rejection",tone:"danger",confidence:"High",owner:"ESB mapping",evidence:[`Visit ${d.visit} → ${xv}.`,`Order ${d.order} → ${xo}.`,response],actions:["Correct Visit/Order transformation.","Regenerate XML and replay only after validation."]};else if(status==="rejected"&&!prior.trim()&&sym!=="patient")r={title:"Missing prerequisite evidence",tone:"danger",confidence:"Medium",owner:"Integration sequence / SLB",evidence:e,actions:["Confirm related ADT and ORM were accepted first.","Process missing prerequisites in sequence."]};else if(status==="rejected"&&/service|item|procedure|master|reference/i.test(response))r={title:"SLB reference-data rejection",tone:"danger",confidence:"High",owner:"SLB master data",evidence:[`Service/item=${xs||d.service||"missing"}.`,response],actions:["Verify code, active status, dates and facility applicability.","Correct master data or mapping before replay."]};else if(status==="rejected")r={title:"SLB business-rule or sequence rejection",tone:"danger",confidence:response?"Medium":"Low",owner:"SLB / Integration",evidence:e,actions:["Obtain exact invalid reason.","Check ADT-before-ORM and ORM-before-DFT/ORU.","Check duplicates, patient class and service code."]};else if(status==="accepted")r={title:`SLB accepted but ${sym} is not reflecting`,tone:"warning",confidence:"Medium",owner:"SLB internal processing",evidence:["Transport acceptance is confirmed; final posting is not proven.",response],actions:["Capture acknowledgement and timestamp.","Check internal processing, audit and commit status.","Do not resend until duplicate impact is evaluated."]};const sql=sym==="patient"?`SELECT * FROM SLMC.TXN_ADM_ENCOUNTER WHERE VISIT_NO = '${d.visit||"VALUE_NOT_FOUND"}';\n\nSELECT * FROM SLMC.TXN_ADM_IN WHERE VISIT_NO = '${d.visit||"VALUE_NOT_FOUND"}';`:`SELECT * FROM SLMC.TXN_INVALID_ORDER_CHARGE WHERE VISIT_NO = '${d.visit||"VALUE_NOT_FOUND"}';\n\nSELECT * FROM SLMC.TXN_OM_ORDER_CART_GRP WHERE VISIT_NO = '${d.visit||"VALUE_NOT_FOUND"}';\n\nSELECT * FROM SLMC.TXN_OM_ORDER_GRP WHERE VISIT_NO = '${d.visit||"VALUE_NOT_FOUND"}' AND CI_NO = '${d.order||"VALUE_NOT_FOUND"}';\n\nSELECT * FROM SLMC.REF_PC_MASTER_SERVICE WHERE MSERVICE_CODE = '${xs||d.service||"VALUE_NOT_FOUND"}';`;r.extra=`<div class="section"><h3>Runtime queries</h3><pre>${sql}</pre></div>`;render("slbResult",r,d)}
 
-    field(segmentName, fieldNumber) {
-        return this.fieldFromSegment(this.firstSegment(segmentName), fieldNumber);
-    }
+const sample=`MSH|^~\\&|OCIS|HOSPITAL|ELINK|INTEGRATION|20260822140000||ORM^O01|ORM-DS-501|P|2.5\nPID|1||PTEST501^^^HOSPITAL^MR||SAMPLE^PATIENT||19840505|M||||||||||VTEST501\nPV1|1|I|WARD3^ROOM301^BED1||||DR500^SANTOS^ANA|||||||||||INPATIENT|VTEST501\nORC|NW|ORD-DS-501^OCIS|||||||||||DR500^SANTOS^ANA\nOBR|1|ORD-DS-501^OCIS||CBC^Complete Blood Count^L`,xmlSample=`<slb:order xmlns:slb="http://example.test/slb">\n<slb:visit_no>VTEST501</slb:visit_no>\n<slb:ci_no>ORD-DS-999</slb:ci_no>\n<slb:service_code>CBC</slb:service_code>\n</slb:order>`;
+document.querySelectorAll("[data-analyze]").forEach(b=>b.onclick=()=>({ocis:analyzeOCIS,esb:analyzeESB,activeq:analyzeAQ,slb:analyzeSLB}[b.dataset.analyze]()))
+document.querySelectorAll("[data-sample]").forEach(b=>b.onclick=()=>{const k=b.dataset.sample;if(k==="ocis")$("ocisHl7").value=`MSH|^~\\&|OCIS|HOSPITAL|ELINK|INTEGRATION|20260822080000||ADT^A01|ADT-001|P|2.5\nEVN|A01|20260822080000\nPID|1||P001^^^MR||TEST^PATIENT||19800101|M||||||||||V001\nPV1|1|I|||||DR1^DOCTOR^ONE|||||||||||INPATIENT|V001`;if(k==="esb"){$("esbHl7").value=sample;$("esbXml").value=xmlSample;$("esbAccepted").checked=true;$("esbStatus").value="rejected";$("esbError").value="Order correlation validation failed"}if(k==="activeq"){$("aqHl7").value=sample;$("aqStatus").value="queued";$("aqName").value="SCM ORM to ESB SendQ";$("aqDepth").value="184";$("aqAge").value="36";$("aqConsumers").value="0";$("aqRetries").value="0";$("aqError").value="No active consumer registered"}if(k==="slb"){$("slbHl7").value=sample;$("slbXml").value=xmlSample;$("slbStatus").value="rejected";$("slbSymptom").value="order";$("slbResponse").value="Order correlation mismatch"}})
 
-    fieldFromSegment(segment, fieldNumber) {
-        if (!segment || !segment.trim()) return "";
-        const fields = segment.split("|");
-
-        // MSH-1 is the field separator. Because the separator itself is not a
-        // normal split field, MSH fields after it use fieldNumber - 1.
-        if (segment.startsWith("MSH|")) {
-            if (fieldNumber === 1) return "|";
-            const index = fieldNumber - 1;
-            return index >= 0 && index < fields.length ? fields[index] : "";
-        }
-
-        return fieldNumber >= 0 && fieldNumber < fields.length ? fields[fieldNumber] : "";
-    }
-
-    component(fieldValue, componentNumber) {
-        if (!fieldValue || !fieldValue.trim()) return "";
-        const components = fieldValue.split("^");
-        const index = componentNumber - 1;
-        return index >= 0 && index < components.length ? components[index] : "";
-    }
-
-    obxValue(identifier) {
-        for (const obx of this.segments("OBX")) {
-            const obx3 = this.fieldFromSegment(obx, 3);
-            const obx31 = this.component(obx3, 1);
-            if (identifier.toLowerCase() === obx31.toLowerCase()) {
-                return this.fieldFromSegment(obx, 5);
-            }
-        }
-        return "";
-    }
-}
-
-function parseHl7(hl7) {
-    if (typeof hl7 !== "string" || !hl7.trim()) {
-        throw new InvalidHl7Error("HL7 message is empty.");
-    }
-
-    const normalized = hl7.replace(/\r\n/g, "\n").replace(/\r/g, "\n").trim();
-    const lines = normalized.split("\n");
-    if (!lines.length || !lines[0].startsWith("MSH|")) {
-        throw new InvalidHl7Error("HL7 message must start with an MSH segment.");
-    }
-
-    return new ParsedHl7(lines.map(line => line.trim()).filter(Boolean));
-}
-
-function xmlEscape(value) {
-    return String(value ?? "")
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&apos;");
-}
-
-function transformOrm(hl7) {
-    const parsed = parseHl7(hl7);
-    const controlId = parsed.field("MSH", 10);
-    const pin = parsed.component(parsed.field("PID", 3), 1);
-    const pid18 = parsed.field("PID", 18);
-    const pv119 = parsed.field("PV1", 19);
-    const visitNo = parsed.component(pid18, 1) || parsed.component(pv119, 1);
-    const facility = parsed.component(pid18, 4);
-    const ciNo = parsed.component(parsed.field("ORC", 2), 1);
-    const requestingUnit = parsed.component(parsed.field("PV1", 3), 1);
-    const orderStatus = parsed.field("ORC", 5);
-    const compoundOrderId = parsed.obxValue("CHRG_SLB_COMPOUND_ID");
-
-    return `<?xml version="1.0" encoding="UTF-8"?>
-<udto:UDTO xmlns:udto="http://slmc.com.ph/udto/"
-           xmlns:cs="http://slmc.com.ph/slmc_cs/"
-           xmlns:slb="http://slmc.com.ph/slb/">
-  <udto:OriginalRequest>
-    <udto:OriginalRequestPayload>
-      <udto:slmc_cs>
-        <cs:common>
-          <cs:pin>${xmlEscape(pin)}</cs:pin>
-          <cs:visit_no>${xmlEscape(visitNo)}</cs:visit_no>
-          <cs:facility>${xmlEscape(facility)}</cs:facility>
-        </cs:common>
-        <cs:slb>
-          <slb:orders>
-            <slb:control_id>${xmlEscape(controlId)}</slb:control_id>
-            <slb:order>
-              <slb:ci_no>${xmlEscape(ciNo)}</slb:ci_no>
-              <slb:order_grp_no>${xmlEscape(ciNo)}</slb:order_grp_no>
-              <slb:requesting_unit>${xmlEscape(requestingUnit)}</slb:requesting_unit>
-              <slb:order_dtl>
-                <slb:scm_order_status>${xmlEscape(orderStatus)}</slb:scm_order_status>
-              </slb:order_dtl>
-            </slb:order>
-          </slb:orders>
-        </cs:slb>
-
-        <study_only_generic_supplies>
-          <compound_order_id>${xmlEscape(compoundOrderId)}</compound_order_id>
-        </study_only_generic_supplies>
-
-      </udto:slmc_cs>
-    </udto:OriginalRequestPayload>
-  </udto:OriginalRequest>
-  <udto:EventKey>emr-to-slb-new-order</udto:EventKey>
-</udto:UDTO>`;
-}
-
-const input = document.getElementById("hl7Input");
-const output = document.getElementById("xmlOutput");
-const status = document.getElementById("status");
-const copyButton = document.getElementById("copyButton");
-
-document.getElementById("transformButton").addEventListener("click", () => {
-    status.textContent = "Transforming...";
-    status.className = "";
-    output.textContent = "";
-    copyButton.disabled = true;
-
-    try {
-        output.textContent = transformOrm(input.value);
-        status.textContent = "Transformation successful.";
-        status.className = "success";
-        copyButton.disabled = false;
-    } catch (error) {
-        status.textContent = error instanceof InvalidHl7Error ? error.message : "Transformation failed.";
-        status.className = "error";
-    }
-});
-
-document.getElementById("clearButton").addEventListener("click", () => {
-    input.value = "";
-    output.textContent = "";
-    status.textContent = "";
-    status.className = "";
-    copyButton.disabled = true;
-    input.focus();
-});
-
-copyButton.addEventListener("click", async () => {
-    try {
-        await navigator.clipboard.writeText(output.textContent);
-        status.textContent = "XML copied to clipboard.";
-        status.className = "success";
-    } catch {
-        status.textContent = "Copy was blocked by the browser. Select the XML and copy it manually.";
-        status.className = "error";
-    }
-});
+function transform(){const raw=$("hl7Input").value,d=info(raw);if(!raw.trim()||!seg(raw,"MSH"))throw Error("HL7 must begin with MSH.");const pid=seg(raw,"PID"),pv1=seg(raw,"PV1"),ft1=seg(raw,"FT1"),pin=d.patient,facility=cmp(fld(pid,18),4),unit=cmp(fld(pv1,3)),quantity=fld(ft1,10);return `<?xml version="1.0" encoding="UTF-8"?>\n<udto:UDTO xmlns:udto="http://slmc.com.ph/udto/" xmlns:cs="http://slmc.com.ph/slmc_cs/" xmlns:slb="http://slmc.com.ph/slb/">\n  <udto:OriginalRequest><udto:OriginalRequestPayload><udto:slmc_cs>\n    <cs:common><cs:pin>${esc(pin)}</cs:pin><cs:visit_no>${esc(d.visit)}</cs:visit_no><cs:facility>${esc(facility)}</cs:facility></cs:common>\n    <cs:slb><slb:orders><slb:control_id>${esc(d.control)}</slb:control_id><slb:order><slb:ci_no>${esc(d.order)}</slb:ci_no><slb:requesting_unit>${esc(unit)}</slb:requesting_unit><slb:order_dtl><slb:service_code>${esc(d.service)}</slb:service_code><slb:quantity>${esc(quantity)}</slb:quantity></slb:order_dtl></slb:order></slb:orders></cs:slb>\n  </udto:slmc_cs></udto:OriginalRequestPayload></udto:OriginalRequest>\n  <udto:EventKey>emr-to-slb-${d.type.toLowerCase()}</udto:EventKey>\n</udto:UDTO>`}
+$("transformButton").onclick=()=>{try{$("xmlOutput").textContent=transform();$("xmlStatus").textContent="Transformation successful.";$("copyXml").disabled=false}catch(e){$("xmlStatus").textContent=e.message}};$("clearXml").onclick=()=>{$("hl7Input").value="";$("xmlOutput").textContent="";$("copyXml").disabled=true};$("copyXml").onclick=async()=>navigator.clipboard.writeText($("xmlOutput").textContent);
