@@ -1,0 +1,1 @@
+.scenario-buttons{display:flex;gap:7px;margin-top:12px}.scenario-buttons button{flex:1}.section-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}.section-heading b{padding:5px 9px;border-radius:12px;background:#e8f6f3;color:var(--green);font-size:10px}@media(max-width:600px){.scenario-buttons{flex-direction:column}}
