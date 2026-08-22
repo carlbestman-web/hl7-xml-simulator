@@ -8,7 +8,18 @@ Browser-only GitHub Pages tools for production-style healthcare integration tria
 - ESB HL7-to-XML correlation, transformation, routing and timeout analysis.
 - ActiveQ consumer, backlog, retry, dead-letter and broker analysis.
 - SLB delivery, prerequisite, reference-data, invalid transaction and accepted-but-not-posted analysis.
-- Separate DFT/HL7 to SLB XML simulator, preserving the repository's original conversion capability.
+- Generic Supplies ORM + DFT to SLB charge XML simulator for confirmed Scenarios 4, 7 and 11.
+- Scenario-specific proposed ZOR mapping sourced from the related ORM OBX fields.
+
+## Generic Supplies XML logic
+
+The DFT is the primary source of charge fields (`FT1-6`, `FT1-7`, `FT1-10`, `FT1-23`, `MSH-3`, and `MSH-10`). The related ORM supplies the proposed ZOR values through Generic Supplies OBX identifiers.
+
+- Scenario 4: `ZOR|compoundOrderId`
+- Scenario 7: `ZOR|item|quantity`
+- Scenario 11: `ZOR|item|quantity|turnInType|compoundOrderId|itemCode`
+
+The tool verifies Visit Number and Order correlation before producing XML. ZOR remains a proposed vendor mapping and must be approved in the interface specification before production implementation.
 
 ## Safety and limitations
 
