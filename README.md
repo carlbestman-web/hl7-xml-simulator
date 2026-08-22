@@ -19,7 +19,7 @@ The DFT is the primary source of charge fields (`FT1-6`, `FT1-7`, `FT1-10`, the 
 - Scenario 7: `ZOR|item|quantity`
 - Scenario 11: `ZOR|item|quantity|turnInType|compoundOrderId|itemCode`
 
-The tool verifies Visit Number and Order correlation before producing XML. **Existing/default** is the safe default and generates the unchanged standard charge XML without ZOR. Scenarios 4, 7, and 11 add their proposed ZOR mapping only when explicitly selected. The enhancement mapping must be approved in the interface specification before production implementation.
+The tool verifies Visit Number and Order correlation before producing XML. Detection is automatic and backward-compatible: no `ZOR` segment produces unchanged existing/default XML; `ZOR` with 1, 2, or 5 populated fields selects Scenario 4, 7, or 11 respectively. Any other ZOR structure is rejected as ambiguous. The enhancement mapping must be approved in the interface specification before production implementation.
 
 ## Safety and limitations
 
