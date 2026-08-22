@@ -1,41 +1,11 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Browser-based ORM HL7 to SLB XML simulator">
-    <title>HL7 to SLB XML Simulator</title>
-    <link rel="stylesheet" href="styles.css">
-</head>
-<body>
-<main class="container">
-    <header>
-        <p class="eyebrow">Integration Study Tool</p>
-        <h1>HL7 <span aria-hidden="true">→</span> SLB XML Simulator</h1>
-        <p class="subtitle">ORM New Order baseline. Processing stays in this browser; no HL7 content is sent to a server.</p>
-    </header>
-
-    <section aria-labelledby="inputHeading">
-        <div class="section-heading">
-            <h2 id="inputHeading">HL7 Input</h2>
-            <button id="clearButton" class="secondary" type="button">Clear</button>
-        </div>
-        <textarea id="hl7Input" spellcheck="false" placeholder="Paste an ORM HL7 message beginning with MSH| ..." aria-describedby="privacyNote"></textarea>
-        <p id="privacyNote" class="note">Use synthetic or approved test data only. Do not enter real patient information.</p>
-        <button id="transformButton" class="primary" type="button">Transform ORM</button>
-        <div id="status" role="status" aria-live="polite"></div>
-    </section>
-
-    <section aria-labelledby="outputHeading">
-        <div class="section-heading">
-            <h2 id="outputHeading">XML Output</h2>
-            <button id="copyButton" class="secondary" type="button" disabled>Copy XML</button>
-        </div>
-        <pre id="xmlOutput" tabindex="0" aria-label="Generated XML output"></pre>
-    </section>
-
-    <footer>Study simulator only — not an approved production SLB interface.</footer>
-</main>
-<script src="app.js"></script>
-</body>
-</html>
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Browser-only healthcare integration troubleshooting and HL7 to SLB XML tools"><title>Healthcare Integration Workbench</title><link rel="stylesheet" href="styles.css"></head>
+<body><header class="top"><div><b class="mark">HX</b><strong>Healthcare Integration Workbench</strong></div><span>Offline payload analysis • No database connection</span></header>
+<nav class="nav" aria-label="Tools"><button class="active" data-tool="ocis">1. OCIS</button><button data-tool="esb">2. ESB</button><button data-tool="activeq">3. ActiveQ</button><button data-tool="slb">4. SLB</button><button data-tool="xml">DFT / HL7 → XML</button></nav>
+<main>
+<section class="panel active" id="ocis"><div class="intro"><p>Stage 1 • Source validation</p><h1>OCIS Data Completeness Analyzer</h1><span>Find missing source data before investigating downstream applications.</span></div><div class="grid"><section class="card"><h2>OCIS evidence</h2><label>HL7 message<textarea id="ocisHl7" placeholder="Paste ADT, ORM/RDE, DFT or ORU…"></textarea></label><div class="actions"><button class="secondary" data-sample="ocis">Load example</button><button class="primary" data-analyze="ocis">Check OCIS</button></div></section><section class="card result" id="ocisResult"><div class="empty">Ready to validate source data.</div></section></div></section>
+<section class="panel" id="esb"><div class="intro"><p>Stage 2 • Transformation and routing</p><h1>ESB Transformation Analyzer</h1><span>Correlate accepted HL7 with generated XML and ESB processing evidence.</span></div><div class="grid"><section class="card"><h2>ESB evidence</h2><label class="check"><input id="esbAccepted" type="checkbox"> eLink acceptance confirmed</label><label>ESB status<select id="esbStatus"><option value="unknown">Unknown</option><option value="not-found">Not found</option><option value="rejected">Rejected</option><option value="processing">Transforming / In progress</option><option value="timeout">Timeout</option><option value="queued">Placed on ActiveQ</option><option value="sent">Sent / accepted downstream</option></select></label><label>Accepted HL7<textarea id="esbHl7"></textarea></label><label>Generated XML<textarea id="esbXml"></textarea></label><label>Error / response<textarea class="short" id="esbError"></textarea></label><div class="actions"><button class="secondary" data-sample="esb">Load mismatch</button><button class="primary" data-analyze="esb">Analyze ESB</button></div></section><section class="card result" id="esbResult"><div class="empty">Ready to inspect transformation and routing.</div></section></div></section>
+<section class="panel" id="activeq"><div class="intro"><p>Stage 3 • Queue processing</p><h1>ActiveQ Processing Analyzer</h1><span>Separate consumer, backlog, retry, dead-letter and broker failures.</span></div><div class="grid"><section class="card"><h2>ActiveQ evidence</h2><label>Status<select id="aqStatus"><option value="unknown">Unknown</option><option value="not-found">Not found</option><option value="queued">Queued</option><option value="retrying">Retrying</option><option value="dlq">Dead-lettered</option><option value="consumed">Consumed</option></select></label><label>Queue name<input id="aqName" placeholder="SCM ORM to ESB SendQ"></label><label>HL7 / payload<textarea id="aqHl7"></textarea></label><div class="metrics"><label>Depth<input id="aqDepth" type="number" min="0"></label><label>Oldest age (min)<input id="aqAge" type="number" min="0"></label><label>Consumers<input id="aqConsumers" type="number" min="0"></label><label>Retries<input id="aqRetries" type="number" min="0"></label><label>DLQ count<input id="aqDlq" type="number" min="0"></label><label>Scope<select id="aqScope"><option value="one">One queue / unknown</option><option value="multiple">Multiple queues</option></select></label></div><label>Last error<textarea class="short" id="aqError"></textarea></label><div class="actions"><button class="secondary" data-sample="activeq">Load zero-consumer case</button><button class="primary" data-analyze="activeq">Analyze ActiveQ</button></div></section><section class="card result" id="activeqResult"><div class="empty">Ready to inspect the queue safely.</div></section></div></section>
+<section class="panel" id="slb"><div class="intro"><p>Stage 4 • Acceptance and posting</p><h1>SLB Invalid Transaction Analyzer</h1><span>Separate delivery, correlation, prerequisite, reference-data and internal posting issues.</span></div><div class="grid"><section class="card"><h2>SLB evidence</h2><label>Symptom<select id="slbSymptom"><option value="patient">Patient/encounter missing</option><option value="order">Order missing</option><option value="charge">Charge/refund missing</option><option value="result">Result missing</option></select></label><label>Status<select id="slbStatus"><option value="unknown">Unknown</option><option value="not-found">No receipt found</option><option value="timeout">No response / timeout</option><option value="rejected">Rejected / invalid</option><option value="accepted">Accepted but not reflecting</option></select></label><label>Current HL7<textarea id="slbHl7"></textarea></label><label>Related prerequisite ADT/ORM<textarea id="slbPrior"></textarea></label><label>ESB outbound XML<textarea id="slbXml"></textarea></label><label>SLB response / invalid reason<textarea class="short" id="slbResponse"></textarea></label><div class="actions"><button class="secondary" data-sample="slb">Load rejection</button><button class="primary" data-analyze="slb">Analyze SLB</button></div></section><section class="card result" id="slbResult"><div class="empty">Ready to verify SLB acceptance and business posting.</div></section></div></section>
+<section class="panel" id="xml"><div class="intro"><p>Separate conversion tool</p><h1>DFT / HL7 → SLB XML Simulator</h1><span>The existing browser-only XML tool remains independent from troubleshooting.</span></div><div class="grid"><section class="card"><h2>HL7 input</h2><label>HL7 message<textarea id="hl7Input" placeholder="Paste an ORM or DFT message beginning with MSH|…"></textarea></label><div class="actions"><button class="secondary" id="clearXml">Clear</button><button class="primary" id="transformButton">Transform HL7</button></div><p class="note" id="xmlStatus"></p></section><section class="card"><h2>XML output</h2><pre id="xmlOutput"></pre><button class="secondary" id="copyXml" disabled>Copy XML</button></section></div></section>
+</main><footer>Use sanitized or approved test data only. Predictions are operational hypotheses and do not prove downstream database state.</footer><script src="app.js"></script></body></html>
