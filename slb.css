@@ -1,0 +1,25 @@
+.catalog-result {
+  margin-top: 12px;
+  max-height: 260px;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.catalog-row {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 4px 10px;
+  padding: 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.catalog-row:last-child { border-bottom: 0; }
+.catalog-row span { font-size: 12px; }
+.catalog-row small {
+  grid-column: 2;
+  color: var(--muted);
+}
+
+#slbDbResults { min-height: 210px; }
+#slbResult pre { min-height: 220px; }
