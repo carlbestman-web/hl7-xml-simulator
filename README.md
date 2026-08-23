@@ -4,7 +4,7 @@ Browser-only GitHub Pages tools for production-style healthcare integration tria
 
 ## Included tools
 
-- Production-symptom-aware OCIS source validation for ADT, ORM/RDE, DFT and ORU, with field-level findings, predicted ownership and gated next steps.
+- Combined OCIS source validation and eLink checkpoint analysis for ADT, ORM/RDE, DFT and ORU, using the component names from the SLMC interface data flow and identifying receive, preparation, queue, rejection and send states.
 - ESB HL7-to-XML correlation, transformation, routing and timeout analysis.
 - ActiveQ consumer, backlog, retry, dead-letter and broker analysis.
 - Dependency-guided SLB investigation that stops at the first failed ADT → ORM/RDE → DFT → ORU prerequisite, generates targeted Oracle queries, interprets pasted results, and provides safe replay guidance.
