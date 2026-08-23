@@ -4,7 +4,7 @@ Browser-only GitHub Pages tools for production-style healthcare integration tria
 
 ## Included tools
 
-- OCIS source-data completeness checks for ADT, ORM/RDE, DFT and ORU.
+- Production-symptom-aware OCIS source validation for ADT, ORM/RDE, DFT and ORU, with field-level findings, predicted ownership and gated next steps.
 - ESB HL7-to-XML correlation, transformation, routing and timeout analysis.
 - ActiveQ consumer, backlog, retry, dead-letter and broker analysis.
 - SLB transaction reconstruction, targeted Oracle query generation, pasted-result interpretation, and a browser-local reusable item catalog.
