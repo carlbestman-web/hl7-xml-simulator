@@ -7,7 +7,7 @@ Browser-only GitHub Pages tools for production-style healthcare integration tria
 - Production-symptom-aware OCIS source validation for ADT, ORM/RDE, DFT and ORU, with field-level findings, predicted ownership and gated next steps.
 - ESB HL7-to-XML correlation, transformation, routing and timeout analysis.
 - ActiveQ consumer, backlog, retry, dead-letter and broker analysis.
-- SLB transaction reconstruction, targeted Oracle query generation, pasted-result interpretation, and a browser-local reusable item catalog.
+- Dependency-guided SLB investigation that stops at the first failed ADT → ORM/RDE → DFT → ORU prerequisite, generates targeted Oracle queries, interprets pasted results, and provides safe replay guidance.
 - ORM/RDE + DFT to SLB charge XML simulator, including multiple FT1 charge rows and confirmed Generic Supplies Scenarios 4, 7 and 11.
 - Scenario-specific proposed ZOR mapping sourced from the related ORM OBX fields.
 

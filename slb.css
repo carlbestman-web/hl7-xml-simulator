@@ -23,3 +23,12 @@
 
 #slbDbResults { min-height: 210px; }
 #slbResult pre { min-height: 220px; }
+.dependency-path { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+.dependency-step { padding:11px; border:1px solid var(--line); border-radius:8px; background:#f7fafc; }
+.dependency-step b,.dependency-step span { display:block; }
+.dependency-step span { margin-top:4px; color:var(--muted); font-size:10px; }
+.dependency-step.pass { border-color:#79c7b3; background:#effaf7; }
+.dependency-step.fail { border-color:#e1a19b; background:#fff3f2; }
+.dependency-step.blocked { opacity:.55; }
+.dependency-summary { padding:11px; border-radius:8px; background:#eef5f8; color:#334f62; font-size:12px; }
+@media(max-width:600px){.dependency-path{grid-template-columns:1fr 1fr}}
