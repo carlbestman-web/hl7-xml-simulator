@@ -8,6 +8,7 @@ Browser-only GitHub Pages tools for production-style healthcare integration tria
 - ESB HL7-to-XML correlation, transformation, routing and timeout analysis.
 - ActiveQ consumer, backlog, retry, dead-letter and broker analysis.
 - Dependency-guided SLB investigation that stops at the first failed ADT → ORM/RDE → DFT → ORU prerequisite, generates targeted Oracle queries, interprets pasted results, and provides safe replay guidance.
+- Phase 4.1 Stage 2.1 interactive test runner for OCIS Cloud → eLink → Mule SIT2 → SLB SIT. It includes realistic happy-path, missing-ADT, cart/missing-DFT, encounter-context mismatch and duplicate scenarios; classifies the first failed dependency; generates SIT Oracle queries; and exports locally saved execution records to CSV.
 - ORM/RDE + DFT to SLB charge XML simulator, including multiple FT1 charge rows and confirmed Generic Supplies Scenarios 4, 7 and 11.
 - Scenario-specific proposed ZOR mapping sourced from the related ORM OBX fields.
 
@@ -28,6 +29,7 @@ The tool verifies Visit Number and Order correlation before producing XML. Detec
 - Use sanitized or formally approved test data only.
 - Predictions are operational hypotheses and do not prove a production database commit.
 - Requeue/replay must follow approved production procedures and duplicate-impact review.
+- Stage 2.1 evidence and saved test executions stay in the current browser (`localStorage`). The runner does not call OCIS, eLink, Mule, ActiveQ, SLB or Oracle directly.
 
 ## GitHub Pages
 
