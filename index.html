@@ -8,7 +8,7 @@
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="xml.css">
 <link rel="stylesheet" href="slb.css?v=20260823-11">
-<link rel="stylesheet" href="ocis.css?v=20260823-10">
+<link rel="stylesheet" href="ocis.css?v=20260825-11">
 <link rel="stylesheet" href="stage21.css?v=20260825-2">
 </head>
 <body>
@@ -60,46 +60,33 @@
 <label>Latest eLink component<select id="elinkComponent">
 <option value="unknown">Unknown / not checked</option>
 <optgroup label="ADT to SLB">
-<option>SCMADTtoSLBRecv</option>
-<option>SCMADTtoSLBPrepQ</option>
-<option>SCMADTtoSLBPrep</option>
+<option>SCMADTSLBPrepQ</option>
 <option>SCMADTSLBSendQ</option>
-<option>SCMADTtoSLBSend</option>
 <option>SCMADTSLBQCSendQ</option>
-<option>SCMADTtoSLBQCSend</option>
 </optgroup>
 <optgroup label="ORM to ESB/SLB">
 <option>SCMORMESBPrepQ</option>
-<option>SCMORMESBPrep</option>
 <option>SCMORMESBSendQ</option>
 </optgroup>
 <optgroup label="DFT charges to ESB/SLB">
-<option>SSCChargeRecv</option>
 <option>SCMChargeToSLBPrepQ</option>
-<option>SCMChargeToSLBPrep</option>
 <option>SCMDFTESBOtherGCSendQ</option>
-<option>SCMDFTESBOtherGCSend</option>
 <option>SCMDFTESBOtherQCSendQ</option>
-<option>SCMDFTESBOtherQCSend</option>
 <option>SCMDFTESBPharmGCSendQ</option>
-<option>SCMDFTESBPharmGCSend</option>
 <option>SCMDFTESBPharmQCSendQ</option>
 </optgroup>
 <optgroup label="ORU results to SLB">
 <option>ResultORUtoSLBPrepQ</option>
-<option>ResultORUtoSLBPrep</option>
 <option>ResultORUtoSLBSendQ</option>
-<option>ResultORUtoSLBSend</option>
 </optgroup>
 </select>
 </label>
 <label>Component state<select id="elinkState">
-<option value="unknown">Unknown</option>
-<option value="not-found">Message not found</option>
-<option value="queued">Queued / waiting</option>
-<option value="processing">In preparation / processing</option>
-<option value="rejected">Rejected / error</option>
-<option value="sent">Sent / completed</option>
+<option value="unknown">Select production status</option>
+<option value="queued">Queued</option>
+<option value="sent">Sent</option>
+<option value="accepted">Accepted</option>
+<option value="rejected">Rejected</option>
 </select>
 </label>
 <div class="metrics">
@@ -296,7 +283,7 @@
 <label>HL7 message bundle <span class="required-pill">ADT + ORM/RDE + DFT</span><textarea id="t21Hl7" placeholder="Paste one or more MSH-delimited messages…"></textarea></label>
 <div class="test-evidence-grid"><label>Transaction being traced<select id="t21Focus"><option value="ADT">ADT encounter</option><option value="ORM">ORM order</option><option value="RDE">RDE pharmacy order</option><option value="DFT">DFT charge</option></select></label><label>Testing environment<select id="t21Environment"><option value="SIT2">Mule SIT2 → SLB SIT</option><option value="PROD-MASKED">Production evidence recreation</option></select></label></div>
 <input id="t21Elink" type="hidden" value="unknown"><input id="t21Mule" type="hidden" value="unknown">
-<div class="route-console"><div class="test-heading"><h2>Interactive delivery checkpoints</h2><button class="secondary compact" id="t21ResetRoute">Reset route</button></div><p class="note">Update each checkpoint from the actual eLink component history, ESB/vendor evidence and SLB result. The test stops at the first unconfirmed or failed stage.</p><div id="t21Route" class="route-checkpoints"></div></div>
+<div class="route-console"><div class="test-heading"><h2>Interactive delivery checkpoints</h2><button class="secondary compact" id="t21ResetRoute">Reset route</button></div><p class="note">For eLink, record only the visible PrepQ and SendQ status: Queued, Sent, Accepted or Rejected. Internal processors are inferred from movement between the queues. The test stops at the first unconfirmed or failed stage.</p><div id="t21Route" class="route-checkpoints"></div></div>
 <label>Middleware error, ACK/NACK or response<textarea class="short" id="t21Response" placeholder="Paste component error or downstream response…"></textarea></label>
 <label>SLB Oracle query output<textarea id="t21Oracle" placeholder="Paste labeled output from TXN_ADM_ENCOUNTER, TXN_ADM_IN, TXN_OM_ORDER_CART_GRP, TXN_OM_ORDER_GRP and TXN_INVALID_ORDER_CHARGE…"></textarea></label>
 <div class="test-evidence-grid"><label>Tester<input id="t21Tester" placeholder="Name or initials"></label><label>Execution status<select id="t21Execution"><option value="Not Run">Not Run</option><option value="Passed">Passed</option><option value="Failed">Failed</option><option value="Blocked">Blocked</option></select></label></div>
@@ -348,7 +335,7 @@
 </section>
 </main>
 <footer>Use sanitized or approved test data only. Predictions are operational hypotheses and do not prove downstream database state.</footer>
-<script src="app.js?v=20260825-18">
+<script src="app.js?v=20260825-19">
 </script>
 </body>
 </html>
