@@ -9,7 +9,7 @@
 <link rel="stylesheet" href="xml.css">
 <link rel="stylesheet" href="slb.css?v=20260823-11">
 <link rel="stylesheet" href="ocis.css?v=20260823-10">
-<link rel="stylesheet" href="stage21.css?v=20260825-1">
+<link rel="stylesheet" href="stage21.css?v=20260825-2">
 </head>
 <body>
 <header class="top">
@@ -291,10 +291,12 @@
 <div class="test-layout">
 <section class="card">
 <div class="test-heading"><h2>Test execution</h2><b id="t21CaseId">S21-HP-001</b></div>
-<label>Scenario<select id="t21Scenario"><option value="happy">Happy path — encounter, order and charge complete</option><option value="missing-adt">Missing ADT — order blocked by encounter prerequisite</option><option value="cart">Order in cart — DFT not completed</option><option value="context">Encounter context mismatch — invalid charge</option><option value="duplicate">Duplicate / out-of-sequence replay</option><option value="custom">Custom production evidence</option></select></label>
+<label>Scenario<select id="t21Scenario"><option value="elink-reject">Production test — DFT rejected at eLink SendQ</option><option value="happy">Happy path — encounter, order and charge complete</option><option value="missing-adt">Missing ADT — order blocked by encounter prerequisite</option><option value="cart">Order in cart — DFT not completed</option><option value="context">Encounter context mismatch — invalid charge</option><option value="duplicate">Duplicate / out-of-sequence replay</option><option value="custom">Custom production evidence</option></select></label>
 <div class="actions"><button class="secondary" id="t21Load">Load scenario</button><button class="secondary" id="t21Clear">Clear evidence</button></div>
 <label>HL7 message bundle <span class="required-pill">ADT + ORM/RDE + DFT</span><textarea id="t21Hl7" placeholder="Paste one or more MSH-delimited messages…"></textarea></label>
-<div class="test-evidence-grid"><label>eLink status<select id="t21Elink"><option value="unknown">Unknown / not supplied</option><option value="accepted">Accepted / sent</option><option value="queued">Queued</option><option value="rejected">Rejected</option></select></label><label>Mule SIT2 status<select id="t21Mule"><option value="unknown">Unknown / not supplied</option><option value="accepted">Transformed / sent</option><option value="processing">Processing</option><option value="rejected">Rejected</option><option value="timeout">Timeout</option></select></label></div>
+<div class="test-evidence-grid"><label>Transaction being traced<select id="t21Focus"><option value="ADT">ADT encounter</option><option value="ORM">ORM order</option><option value="RDE">RDE pharmacy order</option><option value="DFT">DFT charge</option></select></label><label>Testing environment<select id="t21Environment"><option value="SIT2">Mule SIT2 → SLB SIT</option><option value="PROD-MASKED">Production evidence recreation</option></select></label></div>
+<input id="t21Elink" type="hidden" value="unknown"><input id="t21Mule" type="hidden" value="unknown">
+<div class="route-console"><div class="test-heading"><h2>Interactive delivery checkpoints</h2><button class="secondary compact" id="t21ResetRoute">Reset route</button></div><p class="note">Update each checkpoint from the actual eLink component history, ESB/vendor evidence and SLB result. The test stops at the first unconfirmed or failed stage.</p><div id="t21Route" class="route-checkpoints"></div></div>
 <label>Middleware error, ACK/NACK or response<textarea class="short" id="t21Response" placeholder="Paste component error or downstream response…"></textarea></label>
 <label>SLB Oracle query output<textarea id="t21Oracle" placeholder="Paste labeled output from TXN_ADM_ENCOUNTER, TXN_ADM_IN, TXN_OM_ORDER_CART_GRP, TXN_OM_ORDER_GRP and TXN_INVALID_ORDER_CHARGE…"></textarea></label>
 <div class="test-evidence-grid"><label>Tester<input id="t21Tester" placeholder="Name or initials"></label><label>Execution status<select id="t21Execution"><option value="Not Run">Not Run</option><option value="Passed">Passed</option><option value="Failed">Failed</option><option value="Blocked">Blocked</option></select></label></div>
@@ -346,7 +348,7 @@
 </section>
 </main>
 <footer>Use sanitized or approved test data only. Predictions are operational hypotheses and do not prove downstream database state.</footer>
-<script src="app.js?v=20260825-17">
+<script src="app.js?v=20260825-18">
 </script>
 </body>
 </html>
