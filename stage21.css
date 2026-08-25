@@ -41,12 +41,12 @@
 .route-checkpoint b{font-size:11px;color:var(--navy)}
 .route-checkpoint b small{display:block;margin-top:3px;color:var(--muted);font-size:9px;font-weight:500}
 .route-checkpoint select,.route-checkpoint input{margin:0}
-.route-checkpoint.completed{border-left-color:var(--green)}
-.route-checkpoint.completed i{background:#e1f5ef;color:var(--green)}
+.route-checkpoint.accepted{border-left-color:var(--green)}
+.route-checkpoint.accepted i{background:#e1f5ef;color:var(--green)}
 .route-checkpoint.rejected{border-left-color:var(--red)}
 .route-checkpoint.rejected i{background:#ffe7e5;color:var(--red)}
-.route-checkpoint.queued,.route-checkpoint.processing{border-left-color:var(--amber)}
-.route-checkpoint.queued i,.route-checkpoint.processing i{background:#fff0cf;color:var(--amber)}
+.route-checkpoint.queued,.route-checkpoint.sent{border-left-color:var(--amber)}
+.route-checkpoint.queued i,.route-checkpoint.sent i{background:#fff0cf;color:var(--amber)}
 .route-checkpoint.blocked{opacity:.55;background:#f1f4f6}
 .route-verification{padding:12px;border-radius:8px;background:#edf4f7;color:#405667;font-size:11px}
 .route-verification b{color:var(--navy)}
