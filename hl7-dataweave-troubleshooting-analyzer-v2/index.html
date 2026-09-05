@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="HL7 + DataWeave troubleshooting analyzer for ADT, ORM, ORU and DFT mappings">
+  <title>HL7 + DataWeave Troubleshooting Analyzer</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<main class="shell">
+  <header class="hero">
+    <div>
+      <p class="eyebrow">Integration Troubleshooting Tool</p>
+      <h1>HL7 + DataWeave Analyzer</h1>
+      <p class="subtitle">Trace HL7 fields through the selected Mule DataWeave mapping, see the values Mule will consume, and highlight likely integration mismatches.</p>
+    </div>
+    <div class="privacy">Browser-only analysis<br><strong>No HL7 is uploaded</strong></div>
+  </header>
+
+  <section class="panel input-panel">
+    <div class="panel-title-row">
+      <div>
+        <h2>1. Paste HL7</h2>
+        <p>Supports the first six production mappings selected for the troubleshooting tool.</p>
+      </div>
+      <button id="clearBtn" class="btn secondary">Clear</button>
+    </div>
+    <textarea id="hl7Input" spellcheck="false" placeholder="Paste ADT, ORM, ORU, or DFT HL7 beginning with MSH| ..."></textarea>
+    <div class="action-row">
+      <button id="analyzeBtn" class="btn primary">Analyze Message</button>
+      <button id="sampleBtn" class="btn secondary">Load Synthetic A02 Sample</button>
+      <span id="status" class="status"></span>
+    </div>
+    <p class="note">Use synthetic or approved test data only. This is a troubleshooting aid, not a replacement for Mule Runtime or SLB validation.</p>
+  </section>
+
+  <section id="summaryPanel" class="panel hidden">
+    <h2>2. Detected Route</h2>
+    <div id="summaryCards" class="summary-grid"></div>
+  </section>
+
+  <section id="findingsPanel" class="panel hidden">
+    <div class="panel-title-row">
+      <div><h2>3. Findings</h2><p>Potential problems are based on how the selected DataWeave consumes the message.</p></div>
+    </div>
+    <div id="findings"></div>
+  </section>
+
+  <section id="tracePanel" class="panel hidden">
+    <div class="panel-title-row">
+      <div><h2>4. DataWeave Trace</h2><p>Read each row as: HL7 source → DataWeave expression/variable → output or usage.</p></div>
+      <button id="copyTraceBtn" class="btn secondary">Copy Trace</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>HL7</th><th>Value</th><th>DataWeave</th><th>Used as / Output</th><th>Status</th></tr></thead>
+        <tbody id="traceBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="outputPanel" class="panel hidden">
+    <div class="panel-title-row">
+      <div><h2>5. Expected Mapping Output</h2><p>Reconstructed from the fields visible in the selected .dwl. Mule variables/prerequisite lookups are marked when they cannot be derived from HL7 alone.</p></div>
+      <button id="copyOutputBtn" class="btn secondary">Copy</button>
+    </div>
+    <pre id="mappingOutput"></pre>
+  </section>
+
+  <section id="sourcePanel" class="panel hidden">
+    <div class="panel-title-row">
+      <div><h2>6. Mapping Reference</h2><p>The analyzer tells you which real .dwl file is relevant so you can open the same file in Anypoint Studio.</p></div>
+    </div>
+    <pre id="sourceRef"></pre>
+  </section>
+
+  <footer>Study / troubleshooting simulator. Validate suspected root cause with actual ESB logs, generated payload, and SLB rejection evidence before production changes.</footer>
+</main>
+<script src="app.js"></script>
+</body>
+</html>
